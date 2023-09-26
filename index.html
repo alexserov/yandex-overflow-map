@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://api-maps.yandex.ru/v3/?apikey=cc26e8f5-9411-4c3d-947c-e6543c82caaa&lang=ru_RU"></script>
+    <title>Document</title>
+</head>
+<body>
+    <div>
+    <div style="display: flex; flex-direction: column-reverse;">
+        <div style="position: relative;">
+            <div id="map" style="width: 1024px; height: 1024px; position: absolute;"></div>
+            <img id="image" style="width: 1024px; height: 1024px; position: absolute; opacity: 0.5; object-fit: contain; pointer-events: none;"></img>
+        </div>
+        <div>
+            <div style="display: flex;">
+                <p>Прозрачность карт</p>
+                <input type="range" min="0" max="100" value="0" oninput="mapOpacityChanged(this.value)">
+            </div>
+            <div style="display: flex;">
+                <p>Прозрачность картинки</p>
+                <input type="range" min="0" max="100" value="50" oninput="imageOpacityChanged(this.value)">
+            </div>
+            <div>
+                <input type="file" value="Выбрать картинку" onchange="filechanged(this)"></input>
+            </div>
+            <div>
+                <p>Последний клик:</p>
+                <div id="lastclick">
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    function mapOpacityChanged(value) {
+        document.getElementById('map').style.opacity = 1 - value / 100;
+    }
+    function imageOpacityChanged(value) {
+        document.getElementById('image').style.opacity = 1 - value / 100;
+    }
+    async function filechanged(input){
+        var reader = new FileReader();
+
+        reader.onload = function (e) {
+            document.getElementById('image').setAttribute('src', e.target.result);
+        }
+       reader.readAsDataURL(input.files[0]);
+    }
+    initMap();
+
+async function initMap() {
+    // Промис `ymaps3.ready` будет зарезолвлен, когда загрузятся все компоненты основного модуля API
+    await ymaps3.ready;
+
+    const {YMap, YMapDefaultSchemeLayer, YMapListener} = ymaps3;
+
+    // Иницилиазируем карту
+    const map = new YMap(
+        // Передаём ссылку на HTMLElement контейнера
+        document.getElementById('map'),
+
+        // Передаём параметры инициализации карты
+        {
+            location: {
+                // Координаты центра карты
+                center: [37.588144, 55.733842],
+
+                // Уровень масштабирования
+                zoom: 10
+            }
+        }
+    );
+
+    // Создание объекта-слушателя.
+const mapListener = new YMapListener({
+  layer: 'any',
+  // Добавление обработчиков на слушатель.
+  onClick: function (...args) {
+    document.getElementById('lastclick').textContent = `${args[1].coordinates[0]}; ${args[1].coordinates[1]}`;
+    }
+});
+
+// Добавление слушателя на карту.
+map.addChild(mapListener);
+    // Добавляем слой для отображения схематической карты
+    map.addChild(new YMapDefaultSchemeLayer());
+}
+</script>
+</html>
